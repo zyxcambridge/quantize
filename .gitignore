@@ -22,6 +22,8 @@ dump
 *.gif
 *tfevents*
 *_pycache*
+*tflite*
+*tar*
 
 
 *.jpg

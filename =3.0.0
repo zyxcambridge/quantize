@@ -1,0 +1,35 @@
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Collecting pandas
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/19/74/e50234bc82c553fecdbd566d8650801e3fe2d6d8c8d940638e3d8a7c5522/pandas-0.24.2-cp36-cp36m-manylinux1_x86_64.whl
+Collecting mpi4py
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/04/f5/a615603ce4ab7f40b65dba63759455e3da610d9a155d4d4cece1d8fd6706/mpi4py-3.0.2.tar.gz (1.4MB)
+Collecting tensorflow-gpu==1.10.0
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/64/ca/830b7cedb073ae264d215d51bd18d7cff7a2a47e39d79f6fa23edae17bb2/tensorflow_gpu-1.10.0-cp36-cp36m-manylinux1_x86_64.whl
+Collecting python-dateutil>=2.5.0 (from pandas)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/41/17/c62faccbfbd163c7f57f3844689e3a78bae1f403648a6afb1d0866d87fbb/python_dateutil-2.8.0-py2.py3-none-any.whl
+Collecting pytz>=2011k (from pandas)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/3d/73/fe30c2daaaa0713420d0382b16fbb761409f532c56bdcc514bf7b6262bb6/pytz-2019.1-py2.py3-none-any.whl
+Requirement already satisfied: numpy>=1.12.0 in /root/anaconda3/envs/mutil_gpu/lib/python3.6/site-packages (from pandas) (1.16.4)
+Collecting astor>=0.6.0 (from tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/d1/4f/950dfae467b384fc96bc6469de25d832534f6b4441033c39f914efd13418/astor-0.8.0-py2.py3-none-any.whl
+Collecting setuptools<=39.1.0 (from tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/8c/10/79282747f9169f21c053c562a0baa21815a8c7879be97abd930dbcf862e8/setuptools-39.1.0-py2.py3-none-any.whl
+Collecting protobuf>=3.6.0 (from tensorflow-gpu==1.10.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/dc/0e/e7cdff89745986c984ba58e6ff6541bc5c388dd9ab9d7d312b3b1532584a/protobuf-3.9.0-cp36-cp36m-manylinux1_x86_64.whl (1.2MB)
+Requirement already satisfied: wheel>=0.26 in /root/anaconda3/envs/mutil_gpu/lib/python3.6/site-packages (from tensorflow-gpu==1.10.0) (0.33.4)
+Collecting tensorboard<1.11.0,>=1.10.0 (from tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/c6/17/ecd918a004f297955c30b4fffbea100b1606c225dbf0443264012773c3ff/tensorboard-1.10.0-py3-none-any.whl
+Collecting termcolor>=1.1.0 (from tensorflow-gpu==1.10.0)
+Collecting grpcio>=1.8.6 (from tensorflow-gpu==1.10.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/f2/5d/b434403adb2db8853a97828d3d19f2032e79d630e0d11a8e95d243103a11/grpcio-1.22.0-cp36-cp36m-manylinux1_x86_64.whl (2.2MB)
+Collecting six>=1.10.0 (from tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/73/fb/00a976f728d0d1fecfe898238ce23f502a721c0ac0ecfedb80e0d88c64e9/six-1.12.0-py2.py3-none-any.whl
+Collecting gast>=0.2.0 (from tensorflow-gpu==1.10.0)
+Collecting absl-py>=0.1.6 (from tensorflow-gpu==1.10.0)
+Collecting werkzeug>=0.11.10 (from tensorboard<1.11.0,>=1.10.0->tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/9f/57/92a497e38161ce40606c27a86759c6b92dd34fcdb33f64171ec559257c02/Werkzeug-0.15.4-py2.py3-none-any.whl
+Collecting markdown>=2.6.8 (from tensorboard<1.11.0,>=1.10.0->tensorflow-gpu==1.10.0)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/c0/4e/fd492e91abdc2d2fcb70ef453064d980688762079397f779758e055f6575/Markdown-3.1.1-py2.py3-none-any.whl
+Building wheels for collected packages: mpi4py
+  Building wheel for mpi4py (setup.py): started
+  Building wheel for mpi4py (setup.py): finished with status 'canceled'

@@ -4,16 +4,18 @@ import os
 import tensorflow as tf
 
 # ------------------------------------------------
-VERSION = 'MobileNetV2'
-NET_NAME = 'MobilenetV2' #'MobilenetV2'
+VERSION = 'MobileNetV1'
+NET_NAME = 'MobilenetV1' #'MobilenetV2'
 ADD_BOX_IN_TENSORBOARD = True
 
 if NET_NAME.startswith("resnet"):
     weights_name = NET_NAME
 elif NET_NAME.startswith("MobilenetV2"):
     weights_name = "mobilenet/mobilenet_v2_1.0_224"
+elif NET_NAME.startswith("MobilenetV1"):
+    weights_name = "mobilenet/mobilenet_v1_1.0_224"
 else:
-    raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2]')
+    raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2,MobilenetV1]')
 
 # ------------------------------------------ Train config
 RESTORE_FROM_RPN = False

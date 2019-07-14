@@ -177,8 +177,8 @@ class PascalVocDataset(AbstractDataset):
 
     # choose local files or HDFS files w.r.t. FLAGS.data_disk
     if FLAGS.data_disk == 'local':
-      assert FLAGS.data_dir_local is not None, '<FLAGS.data_dir_local> must not be None'
-      self.data_dir = FLAGS.data_dir_local
+      # assert FLAGS.data_dir_local is not None, '<FLAGS.data_dir_local> must not be None'
+      self.data_dir = 'data/voc2007_tf'
     elif FLAGS.data_disk == 'hdfs':
       assert FLAGS.data_hdfs_host is not None and FLAGS.data_dir_hdfs is not None, \
         'both <FLAGS.data_hdfs_host> and <FLAGS.data_dir_hdfs> must not be None'

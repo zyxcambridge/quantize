@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # default arguments
-nb_gpus=1
+nb_gpus=5
 
 # parse arguments passed from the command line
 py_script="$1"
@@ -44,5 +44,5 @@ elif [ ${nb_gpus} -le 8 ]; then
   options="-np ${nb_gpus} -H localhost:${nb_gpus} -bind-to none -map-by slot
       -x NCCL_DEBUG=INFO -x NCCL_SOCKET_IFNAME=eth1 -x NCCL_IB_DISABLE=1
       -x LD_LIBRARY_PATH --mca btl_tcp_if_include eth1"
-  mpirun ${options} python main.py --enbl_multi_gpu ${extra_args}
+  mpirun $MY_MPIRUN_CLI_ARGS  ${options} python main.py --enbl_multi_gpu ${extra_args}
 fi

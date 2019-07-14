@@ -27,6 +27,10 @@ from utils.external.faster_rcnn_tensorflow.utility.proposal_target_layer import 
 
 from utils.external.ssd_tensorflow.voc_eval import do_python_eval
 
+
+# add  mobilenet_v1
+from utils.external.faster_rcnn_tensorflow.net import mobilenet_v1_faster_rcnn as mobilenet_v1
+
 # model related configuration
 tf.app.flags.DEFINE_integer('nb_iters_train', 200000, 'The number of training iterations.')
 tf.app.flags.DEFINE_float('momentum', 0.9, 'momentum coefficient')
@@ -42,8 +46,10 @@ def build_base_network(inputs, is_train):
     return resnet.resnet_base(inputs, scope_name=cfgs.NET_NAME, is_training=is_train)
   elif cfgs.NET_NAME.startswith('MobilenetV2'):
     return mobilenet_v2.mobilenetv2_base(inputs, is_training=is_train)
+  elif cfgs.NET_NAME.startswith('MobilenetV1'):
+    return mobilenet_v1.mobilenetv1_base(inputs, is_training=is_train)
   else:
-    raise ValueError('Sry, we only support resnet or mobilenet_v2')
+    raise ValueError('Sry, we only support resnet or mobilenet_v2 mobilenet_v1')
 
 def build_fastrcnn(is_train, feature_to_cropped, rois, img_shape):
   with tf.variable_scope('Fast-RCNN'):
@@ -57,8 +63,10 @@ def build_fastrcnn(is_train, feature_to_cropped, rois, img_shape):
                                         is_training=is_train,
                                         scope_name=cfgs.NET_NAME)
     elif cfgs.NET_NAME.startswith('Mobile'):
-      fc_flatten = mobilenet_v2.mobilenetv2_head(inputs=pooled_features,
-                                                   is_training=is_train)
+      # fc_flatten = mobilenet_v2.mobilenetv2_head(inputs=pooled_features,
+      #                                              is_training=is_train)
+      fc_flatten = mobilenet_v1.mobilenetv1_head(inputs=pooled_features,
+                                                 is_training=is_train)
     else:
       raise NotImplementedError('only support resnet and mobilenet')
 
@@ -559,8 +567,10 @@ class ModelHelper(AbstractModelHelper):
         weights_name = cfgs.NET_NAME
       elif cfgs.NET_NAME.startswith("MobilenetV2"):
         weights_name = "mobilenet/mobilenet_v2_1.0_224"
+      elif cfgs.NET_NAME.startswith("MobilenetV1"):
+        weights_name = "mobilenet/mobilenet_v1_1.0_224"
       else:
-        raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2]')
+        raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2 MobilenetV1]')
       checkpoint_path = os.path.join(FLAGS.backbone_ckpt_dir, weights_name + '.ckpt')
       print("model restore from pretrained mode, path is :", checkpoint_path)
       # for var in model_variables:
