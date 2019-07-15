@@ -54,10 +54,12 @@ class FullPrecLearner(AbstractLearner):  # pylint: disable=too-many-instance-att
     self.__build(is_train=True)
     self.__build(is_train=False)
 
+
   def train(self):
     """Train a model and periodically produce checkpoint files."""
 
     # initialization
+
     self.sess_train.run(self.init_op)
     self.warm_start(self.sess_train)
     if FLAGS.enbl_multi_gpu:
@@ -169,13 +171,16 @@ class FullPrecLearner(AbstractLearner):  # pylint: disable=too-many-instance-att
         self.init_op = tf.variables_initializer(self.vars)
         if FLAGS.enbl_multi_gpu:
           self.bcast_op = mgw.broadcast_global_variables(0)
-        self.saver_train = tf.train.Saver(self.vars)
+        self.saver_train = tf.train.Saver(self.vars,max_to_keep=30)
       else:
         self.sess_eval = sess
         self.eval_op = [loss] + list(metrics.values())
         self.eval_op_names = ['loss'] + list(metrics.keys())
         self.outputs_eval = logits
-        self.saver_eval = tf.train.Saver(self.vars)
+        self.saver_eval = tf.train.Saver(self.vars,max_to_keep=30)
+      summary_writer = tf.summary.FileWriter('logs', graph=tf.get_default_graph())
+      summary_writer.flush()
+
 
   def __save_model(self, is_train):
     """Save the model to checkpoint files for training or evaluation.
