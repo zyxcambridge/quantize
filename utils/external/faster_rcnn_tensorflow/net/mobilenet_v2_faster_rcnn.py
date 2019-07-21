@@ -14,14 +14,13 @@ V2_BASE_DEF = dict(
     defaults={
         # Note: these parameters of batch norm affect the architecture
         # that's why they are here and not in training_scope.
-        (slim.batch_norm,): {'center': True, 'scale': True},
+
         (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
-            'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+           'activation_fn': tf.nn.relu6
         },
         (ops.expanded_conv,): {
             'expansion_size': expand_input(6),
             'split_expansion': 1,
-            'normalizer_fn': slim.batch_norm,
             'residual': True
         },
         (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}
@@ -51,14 +50,13 @@ V2_HEAD_DEF = dict(
     defaults={
         # Note: these parameters of batch norm affect the architecture
         # that's why they are here and not in training_scope.
-        (slim.batch_norm,): {'center': True, 'scale': True},
         (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
-            'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+             'activation_fn': tf.nn.relu6
         },
         (ops.expanded_conv,): {
             'expansion_size': expand_input(6),
             'split_expansion': 1,
-            'normalizer_fn': slim.batch_norm,
+
             'residual': True
         },
         (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}
@@ -90,9 +88,8 @@ def mobilenetv2_scope(is_training=True,
   }
   with slim.arg_scope(training_scope(is_training=is_training, weight_decay=weight_decay)):
       with slim.arg_scope([slim.conv2d, slim.fully_connected, slim.separable_conv2d],
-                          trainable=trainable):
-          with slim.arg_scope([slim.batch_norm], **batch_norm_params) as sc:
-              return sc
+                          trainable=trainable)as sc:
+            return sc
 
 
 

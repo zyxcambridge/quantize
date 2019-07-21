@@ -4,18 +4,16 @@ import os
 import tensorflow as tf
 
 # ------------------------------------------------
-VERSION = 'MobileNetV1'
-NET_NAME = 'MobilenetV1' #'MobilenetV2'
+VERSION = 'MobileNetV2'
+NET_NAME = 'MobilenetV2' #'MobilenetV2'
 ADD_BOX_IN_TENSORBOARD = True
 
 if NET_NAME.startswith("resnet"):
     weights_name = NET_NAME
 elif NET_NAME.startswith("MobilenetV2"):
     weights_name = "mobilenet/mobilenet_v2_1.0_224"
-elif NET_NAME.startswith("MobilenetV1"):
-    weights_name = "mobilenet/mobilenet_v1_1.0_224"
 else:
-    raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2,MobilenetV1]')
+    raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2]')
 
 # ------------------------------------------ Train config
 RESTORE_FROM_RPN = False
@@ -38,7 +36,7 @@ EPSILON = 1e-5
 # DECAY_STEP = [50000, 70000]  # ResNet
 LR = 0.0003 # MobileNet\
 DECAY_STEP = [50000, 100000]  # MobileNet
-MAX_ITERATION = 200000
+MAX_ITERATION = 20000000
 
 # -------------------------------------------- Data_preprocess_config
 DATASET_NAME = 'pascal'  # 'ship', 'spacenet', 'pascal', 'coco'

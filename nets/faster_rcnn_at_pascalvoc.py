@@ -14,7 +14,7 @@ import tensorflow.contrib.slim as slim
 from utils.external.faster_rcnn_tensorflow.preprocessing.faster_rcnn_preprocessing import preprocess_image
 
 from utils.external.faster_rcnn_tensorflow.net import resnet_faster_rcnn as resnet
-from utils.external.faster_rcnn_tensorflow.net import mobilenet_v2_faster_rcnn as mobilenet_v2
+# from utils.external.faster_rcnn_tensorflow.net import mobilenet_v2_faster_rcnn as mobilenet_v2
 
 from utils.external.faster_rcnn_tensorflow.utility import anchor_utils, encode_and_decode, boxes_utils
 from utils.external.faster_rcnn_tensorflow.configs import cfgs
@@ -27,10 +27,6 @@ from utils.external.faster_rcnn_tensorflow.utility.proposal_target_layer import 
 
 from utils.external.ssd_tensorflow.voc_eval import do_python_eval
 
-
-# add  mobilenet_v1
-from utils.external.faster_rcnn_tensorflow.net import mobilenet_v1_faster_rcnn as mobilenet_v1
-
 # model related configuration
 tf.app.flags.DEFINE_integer('nb_iters_train', 200000, 'The number of training iterations.')
 tf.app.flags.DEFINE_float('momentum', 0.9, 'momentum coefficient')
@@ -41,15 +37,124 @@ tf.app.flags.DEFINE_string('backbone_ckpt_dir', './backbone_models/',
                            'The backbone model\'s (e.g. VGG-16) checkpoint directory')
 FLAGS = tf.app.flags.FLAGS
 
+import tensorflow as tf
+
+class mobilenet_v1_frcn:
+    def __init__(self, input, trainable):
+        self.input = input
+        self.trainable = trainable
+        # self.mobilenetv1_base_network= self._build_base_network()
+        # self.mobilenetv1_head_network = self._build_head_network()
+
+    def separable_conv_block(self, input, dw_filter, output_channel, strides, name):
+        """
+        Params:
+        input:
+        filter:  a 4-D tuple: [filter_width, filter_height, in_channels, multiplier]
+        output_channel: output channel of the separable_conv_block
+        strides: a 4-D list: [1,strides,strides,1]
+        """
+        with tf.variable_scope(name):
+
+            dw_weight = tf.get_variable(name='dw_filter', dtype=tf.float32, trainable=True,
+                                     shape=dw_filter, initializer=tf.random_normal_initializer(stddev=0.01))
+
+            dw = tf.nn.depthwise_conv2d(input=input, filter=dw_weight, strides=strides, padding="SAME", name='Conv/dw')
+
+            bn_dw = tf.layers.batch_normalization(dw, beta_initializer=tf.zeros_initializer(),
+                                                gamma_initializer=tf.ones_initializer(),
+                                                moving_mean_initializer=tf.zeros_initializer(),
+                                                moving_variance_initializer=tf.ones_initializer(), training=self.trainable,
+                                                name='dw/bn')
+            relu = tf.nn.leaky_relu(bn_dw,0.1)
+            weight = tf.get_variable(name='weight', dtype=tf.float32, trainable=True,
+                                     shape=(1, 1, dw_filter[2]*dw_filter[3], output_channel), initializer=tf.random_normal_initializer(stddev=0.01))
+
+            conv = tf.nn.conv2d(input=relu, filter=weight, strides=[1, 1, 1, 1], padding="SAME",name="conv/s1")
+            bn_pt = tf.layers.batch_normalization(conv, beta_initializer=tf.zeros_initializer(),
+                                               gamma_initializer=tf.ones_initializer(),
+                                               moving_mean_initializer=tf.zeros_initializer(),
+                                               moving_variance_initializer=tf.ones_initializer(),
+                                               training=self.trainable,
+                                               name='pt/bn')
+            return tf.nn.leaky_relu(bn_pt,0.1)
+
+    def mobilenetv1_base_network(self):
+        with tf.variable_scope('MobileNet_build_base_network'):
+            conv1 = tf.layers.conv2d(self.input,
+                                      filters=32,
+                                      kernel_size=(3, 3 ),
+                                      strides=(2,2),
+                                      padding = 'same',
+                                      activation = tf.nn.relu,
+                                      name = 'conv1'
+                                      )
+            bn1 = tf.layers.batch_normalization(conv1, beta_initializer=tf.zeros_initializer(),
+                                                 gamma_initializer=tf.ones_initializer(),
+                                                 moving_mean_initializer=tf.zeros_initializer(),
+                                                 moving_variance_initializer=tf.ones_initializer(), training=self.trainable,
+                                                 name='bn')
+            x = self.separable_conv_block(input=bn1, dw_filter=(3,3,32,1),output_channel=64,
+                                                     strides=(1,1,1,1), name="spearable_1")
+
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 64, 1), output_channel=128,
+                                                     strides=(1, 2, 2, 1), name="spearable_2")
+
+            x = self.separable_conv_block(input=x, dw_filter=(3,3,128,1),output_channel=128,
+                                                     strides=(1,1,1,1), name="spearable_3")
+
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 128, 1), output_channel=256,
+                                                     strides=(1, 2, 2, 1), name="spearable_4")
+
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 256, 1), output_channel=256,
+                                                     strides=(1, 1, 1, 1), name="spearable_5")
+            route1 = x
+
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 256, 1), output_channel=512,
+                                                     strides=(1, 2, 2, 1), name="spearable_6")
+
+            for i in range(5):
+                x = self.separable_conv_block(input=x, dw_filter=(3, 3, 512, 1), output_channel=512,
+                                                     strides=(1, 1, 1, 1), name="spearable_%d" % (i+ 7))
+            route2 = x
+        return  x
+
+    def _build_head_network(self,x):
+        with tf.variable_scope('MobileNet_build_head_network'):
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 512, 1), output_channel=1024,
+                                          strides=(1, 2, 2, 1), name="spearable_12")
+
+            x = self.separable_conv_block(input=x, dw_filter=(3, 3, 1024, 1), output_channel=1024,
+                                          strides=(1, 1, 1, 1), name="spearable_13")
+
+            # average pooling done by reduce_mean
+            x = tf.reduce_mean(x, axis=[1, 2])
+
+            # _, _, output = Mobilenet(reshape_x, is_train).outputs
+            # avg_pooling = tf.nn.avg_pool(output, ksize=[1, 7, 7, 1], strides=[1, 1, 1, 1], padding="SAME",
+            #                              name="Avg_pooling")
+            #
+            # dense1 = tf.layers.dense(inputs=avg_pooling, units=512, activation=None,
+            #                          kernel_initializer=tf.random_normal_initializer(stddev=0.01), trainable=True,
+            #                          name="dense1")
+            #
+            # bn1 = tf.layers.batch_normalization(dense1, beta_initializer=tf.zeros_initializer(),
+            #                                     gamma_initializer=tf.ones_initializer(),
+            #                                     moving_mean_initializer=tf.zeros_initializer(),
+            #                                     moving_variance_initializer=tf.ones_initializer(), training=is_train,
+            #                                     name='bn1')
+            # relu1 = tf.nn.leaky_relu(bn1, 0.1)
+            #
+            # dense2 = tf.layers.dense(inputs=relu1, units=10,
+            #                          kernel_initializer=tf.random_normal_initializer(stddev=0.01), trainable=True,
+            #                          name="dense2")
+            # sqz = tf.squeeze(dense2, [1, 2], name='sqz')
+            #
+            # prediction = tf.nn.softmax(sqz, name='prediction')
+        return x
+
 def build_base_network(inputs, is_train):
-  if cfgs.NET_NAME.startswith('resnet_v1'):
-    return resnet.resnet_base(inputs, scope_name=cfgs.NET_NAME, is_training=is_train)
-  elif cfgs.NET_NAME.startswith('MobilenetV2'):
-    return mobilenet_v2.mobilenetv2_base(inputs, is_training=is_train)
-  elif cfgs.NET_NAME.startswith('MobilenetV1'):
-    return mobilenet_v1.mobilenetv1_base(inputs, is_training=is_train)
-  else:
-    raise ValueError('Sry, we only support resnet or mobilenet_v2 mobilenet_v1')
+    return mobilenet_v1_frcn(inputs, is_train).mobilenetv1_base_network()
 
 def build_fastrcnn(is_train, feature_to_cropped, rois, img_shape):
   with tf.variable_scope('Fast-RCNN'):
@@ -57,18 +162,7 @@ def build_fastrcnn(is_train, feature_to_cropped, rois, img_shape):
     with tf.variable_scope('rois_pooling'):
       pooled_features = roi_pooling(feature_maps=feature_to_cropped, rois=rois, img_shape=img_shape)
 
-    # 6. inferecne rois in Fast-RCNN to obtain fc_flatten features
-    if cfgs.NET_NAME.startswith('resnet'):
-      fc_flatten = resnet.restnet_head(input=pooled_features,
-                                        is_training=is_train,
-                                        scope_name=cfgs.NET_NAME)
-    elif cfgs.NET_NAME.startswith('Mobile'):
-      # fc_flatten = mobilenet_v2.mobilenetv2_head(inputs=pooled_features,
-      #                                              is_training=is_train)
-      fc_flatten = mobilenet_v1.mobilenetv1_head(inputs=pooled_features,
-                                                 is_training=is_train)
-    else:
-      raise NotImplementedError('only support resnet and mobilenet')
+      fc_flatten = mobilenet_v1_frcn(pooled_features, is_train)._build_head_network(pooled_features)
 
       # 7. cls and reg in Fast-RCNN
       # tf.variance_scaling_initializer()
@@ -503,7 +597,20 @@ class ModelHelper(AbstractModelHelper):
     inputs_dict = {'inputs': inputs, 'objects': objects}
     outputs = forward_fn(inputs_dict, True)
     self.vars = slim.get_model_variables()
+    print('=============new frcn===========')
+    for var in self.vars:
+        print(var.name)
+    print(20 * "__===__")
     return outputs
+
+  # def forward_train(self, inputs):
+  #   """Forward computation at training."""
+  #   outputs = forward_fn(inputs, True)
+  #   self.vars = slim.get_model_variables()
+  #   for var in self.vars:
+  #       print(var.name)
+  #   print(20 * "__++__++__")
+  #   return outputs
 
   def forward_eval(self, inputs, data_format='channels_last'):
     """Forward computation at evaluation."""
@@ -566,16 +673,14 @@ class ModelHelper(AbstractModelHelper):
       if cfgs.NET_NAME.startswith("resnet"):
         weights_name = cfgs.NET_NAME
       elif cfgs.NET_NAME.startswith("MobilenetV2"):
-        weights_name = "mobilenet/mobilenet_v2_1.0_224"
-      elif cfgs.NET_NAME.startswith("MobilenetV1"):
-        weights_name = "mobilenet/mobilenet_v1_1.0_224"
+        weights_name = ""
       else:
-        raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2 MobilenetV1]')
+        raise Exception('net name must in [resnet_v1_101, resnet_v1_50, MobilenetV2]')
       checkpoint_path = os.path.join(FLAGS.backbone_ckpt_dir, weights_name + '.ckpt')
       print("model restore from pretrained mode, path is :", checkpoint_path)
-      # for var in model_variables:
-      #     print(var.name)
-      # print(20*"__++__++__")
+      for var in model_variables:
+          print(var.name)
+      print(20*"__++__++__")
 
       def name_in_ckpt_rpn(var):
         '''
@@ -616,9 +721,9 @@ class ModelHelper(AbstractModelHelper):
       # restore variables from checkpoint files
       saver = tf.train.Saver(restore_variables, reshape=False)
       saver.build()
-      saver.restore(sess, checkpoint_path)
+      # saver.restore(sess, checkpoint_path)
       print(20 * "****")
-      print("restore from pretrained_weighs in IMAGE_NET")
+      # print("restore from pretrained_weighs in IMAGE_NET")
     print('model restored')
 
 

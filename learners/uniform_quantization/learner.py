@@ -35,7 +35,7 @@ FLAGS = tf.app.flags.FLAGS
 # Quantize parameters
 tf.app.flags.DEFINE_integer('uql_weight_bits', 4, \
     'Number of bits to use for quantizing weights')
-tf.app.flags.DEFINE_integer('uql_activation_bits', 32, \
+tf.app.flags.DEFINE_integer('uql_activation_bits', 4, \
     'Number of bits to use for quantizing activations')
 tf.app.flags.DEFINE_boolean('uql_use_buckets', False, 'Use bucketing or not')
 tf.app.flags.DEFINE_integer('uql_bucket_size', 256, 'Number of bucket size')

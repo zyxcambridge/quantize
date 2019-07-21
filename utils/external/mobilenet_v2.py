@@ -43,14 +43,14 @@ V2_DEF = dict(
     defaults={
         # Note: these parameters of batch norm affect the architecture
         # that's why they are here and not in training_scope.
-        (slim.batch_norm,): {'center': True, 'scale': True},
+
         (slim.conv2d, slim.fully_connected, slim.separable_conv2d): {
-            'normalizer_fn': slim.batch_norm, 'activation_fn': tf.nn.relu6
+             'activation_fn': tf.nn.relu6
         },
         (ops.expanded_conv,): {
             'expansion_size': expand_input(6),
             'split_expansion': 1,
-            'normalizer_fn': slim.batch_norm,
+
             'residual': True
         },
         (slim.conv2d, slim.separable_conv2d): {'padding': 'SAME'}

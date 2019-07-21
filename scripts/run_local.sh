@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # default arguments
-nb_gpus=5
+nb_gpus=4
 
 # parse arguments passed from the command line
 py_script="$1"

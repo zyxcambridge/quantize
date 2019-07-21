@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_integer('uqtf_activation_bits', 8,
                             'UQ-TF: # of bits for activation quantization')
 tf.app.flags.DEFINE_integer('uqtf_quant_delay', 0,
                             'UQ-TF: # of steps after which weights and activations are quantized')
-tf.app.flags.DEFINE_integer('uqtf_freeze_bn_delay', None,
+tf.app.flags.DEFINE_integer('uqtf_freeze_bn_delay', 1000,
                             'UT-TF: # of steps after which moving mean and variance are frozen \
                             and used instead of batch statistics during training.')
 tf.app.flags.DEFINE_float('uqtf_lrn_rate_dcy', 1e-2, 'UQ-TF: learning rate\'s decaying factor')
@@ -87,16 +87,16 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
 
     # detect unquantized activations nodes
     self.unquant_node_names = []
-    if FLAGS.uqtf_enbl_manual_quant:
-      self.unquant_node_names = find_unquant_act_nodes(
-        model_helper, self.data_scope, self.model_scope_quan, self.mpi_comm)
-    tf.logging.info('unquantized activation nodes: {}'.format(self.unquant_node_names))
+    # if FLAGS.uqtf_enbl_manual_quant:
+    #   self.unquant_node_names = find_unquant_act_nodes(
+    #     model_helper, self.data_scope, self.model_scope_quan, self.mpi_comm)
+    # tf.logging.info('unquantized activation nodes: {}'.format(self.unquant_node_names))
 
     # class-dependent initialization
     if FLAGS.enbl_dst:
       self.helper_dst = DistillationHelper(sm_writer, model_helper, self.mpi_comm)
     self.__build_train()
-    self.__build_eval()
+    # self.__build_eval()
 
   def train(self):
     """Train a model and periodically produce checkpoint files."""
@@ -126,7 +126,7 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
       # save the model at certain steps
       if self.is_primary_worker('global') and (idx_iter + 1) % FLAGS.save_step == 0:
         self.__save_model(is_train=True)
-        self.evaluate()
+        # self.evaluate()
       self.auto_barrier()
 
     # save the final model
@@ -134,7 +134,7 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
       self.__save_model(is_train=True)
       self.__restore_model(is_train=False)
       self.__save_model(is_train=False)
-      self.evaluate()
+      # self.evaluate()
 
   def evaluate(self):
     """Restore a model from the latest checkpoint files and then evaluate it."""
@@ -169,19 +169,24 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
 
       # model definition - uniform quantized model - part 1
       with tf.variable_scope(self.model_scope_quan):
-        logits_quan = self.forward_train(images)
-        if not isinstance(logits_quan, dict):
-          outputs = tf.nn.softmax(logits_quan)
-        else:
-          outputs = tf.nn.softmax(logits_quan['cls_pred'])
+        inputs_dict = {'inputs': images, 'objects': labels}
+        logits_quan = self.forward_train(images,labels)
+        # if not isinstance(logits_quan, dict):
+        #   outputs = tf.nn.softmax(logits_quan)
+        # else:
+        #   outputs = tf.nn.softmax(logits_quan['cls_pred'])
+
         tf.contrib.quantize.experimental_create_training_graph(
           weight_bits=FLAGS.uqtf_weight_bits,
           activation_bits=FLAGS.uqtf_activation_bits,
           quant_delay=FLAGS.uqtf_quant_delay,
           freeze_bn_delay=FLAGS.uqtf_freeze_bn_delay,
           scope=self.model_scope_quan)
+
+
         for node_name in self.unquant_node_names:
           insert_quant_op(graph, node_name, is_train=True)
+
         self.vars_quan = get_vars_by_scope(self.model_scope_quan)
         self.global_step = tf.train.get_or_create_global_step()
         self.saver_quan_train = tf.train.Saver(self.vars_quan['all'] + [self.global_step])
@@ -192,7 +197,7 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
 
       # model definition - full model
       with tf.variable_scope(self.model_scope_full):
-        __ = self.forward_train(images)
+        __ = self.forward_train(images,labels)
         self.vars_full = get_vars_by_scope(self.model_scope_full)
         self.saver_full = tf.train.Saver(self.vars_full['all'])
         self.save_path_full = FLAGS.save_path
@@ -257,7 +262,8 @@ class UniformQuantTFLearner(AbstractLearner):  # pylint: disable=too-many-instan
       self.log_op_names = ['lr', 'loss'] + list(metrics.keys())
       if FLAGS.enbl_multi_gpu:
         self.bcast_op = mgw.broadcast_global_variables(0)
-
+      summary_writer = tf.summary.FileWriter('logs', graph=tf.get_default_graph())
+      summary_writer.flush()
   def __build_eval(self):
     """Build the evaluation graph."""
 

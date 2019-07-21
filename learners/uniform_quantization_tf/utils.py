@@ -183,10 +183,10 @@ def build_graph(model_helper, unquant_node_names, config, is_train):
     with tf.variable_scope(config['model_scope']):
       # obtain outputs from model's forward-pass
       outputs = forward_fn(inputs)
-      if not isinstance(outputs, dict):
-        outputs_sfmax = tf.nn.softmax(outputs)  # <outputs> is logits
-      else:
-        outputs_sfmax = tf.nn.softmax(outputs['cls_pred'])  # <outputs['cls_pred']> is logits
+      # if not isinstance(outputs, dict):
+      #   outputs_sfmax = tf.nn.softmax(outputs)  # <outputs> is logits
+      # else:
+      #   outputs_sfmax = tf.nn.softmax(outputs['cls_pred'])  # <outputs['cls_pred']> is logits
 
       # quantize the graph using TensorFlow APIs
       create_quant_graph_fn(
@@ -268,7 +268,7 @@ def find_unquant_act_nodes(model_helper, data_scope, model_scope, mpi_comm):
   while True:
     # build training & evaluation graphs
     model_train = build_graph(model_helper, unquant_node_names, config, is_train=True)
-    model_eval = build_graph(model_helper, unquant_node_names, config, is_train=False)
+    # model_eval = build_graph(model_helper, unquant_node_names, config, is_train=False)
 
     # initialize a model in the training graph, and then save
     model_train['sess'].run(model_train['init_op'])
@@ -278,9 +278,9 @@ def find_unquant_act_nodes(model_helper, data_scope, model_scope, mpi_comm):
 
     # restore a model in the evaluation graph from *.ckpt files, and then save again
     save_path = tf.train.latest_checkpoint(os.path.dirname(FLAGS.uqtf_save_path_probe))
-    model_eval['saver'].restore(model_eval['sess'], save_path)
+    # model_eval['saver'].restore(model_eval['sess'], save_path)
     tf.logging.info('model restored from ' + save_path)
-    save_path = model_eval['saver'].save(model_eval['sess'], FLAGS.uqtf_save_path_probe_eval)
+    # save_path = model_eval['saver'].save(model_eval['sess'], FLAGS.uqtf_save_path_probe_eval)
     tf.logging.info('model saved to ' + save_path)
 
     # try to export *.tflite models and check for unquantized nodes (if any)

@@ -227,7 +227,6 @@ def mobilenet_base(  # pylint: disable=invalid-name
   # c) set all defaults
   # d) set all extra overrides.
   with _scope_all(scope, default_scope='Mobilenet'), \
-      safe_arg_scope([slim.batch_norm], is_training=is_training), \
       _set_arg_scope_defaults(conv_defs_defaults), \
       _set_arg_scope_defaults(conv_defs_overrides):
     # The current_stride variable keeps track of the output stride of the
@@ -456,9 +455,8 @@ def training_scope(is_training=True,
   with slim.arg_scope(
       [slim.conv2d, slim.fully_connected, slim.separable_conv2d],
       weights_initializer=weight_intitializer,
-      normalizer_fn=slim.batch_norm), \
+      ), \
       slim.arg_scope([mobilenet_base, mobilenet], is_training=is_training),\
-      safe_arg_scope([slim.batch_norm], **batch_norm_params), \
       safe_arg_scope([slim.dropout], is_training=is_training,
                      keep_prob=dropout_keep_prob), \
       slim.arg_scope([slim.conv2d], \
