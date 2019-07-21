@@ -188,7 +188,7 @@ class PascalVocDataset(AbstractDataset):
 
     # configure file patterns & function handlers
     if is_train:
-      self.file_pattern = os.path.join(self.data_dir, '*val*')
+      self.file_pattern = os.path.join(self.data_dir, '*train*')
       self.batch_size = FLAGS.batch_size
     else:
       self.file_pattern = os.path.join(self.data_dir, '*val*')
